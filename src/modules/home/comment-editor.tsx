@@ -6,7 +6,10 @@ import {
   DialogPanel,
   DialogTitle,
 } from "@headlessui/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { addPost } from "@/services/post";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface CommentEditorProps {
   isOpen: boolean;
@@ -17,6 +20,20 @@ const CommentEditor = ({ isOpen, setIsOpen }: CommentEditorProps) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
+  const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const currentPage = searchParams.get("page") || "1";
+  const router = useRouter();
+  const { mutate: addPostMutate, isPending } = useMutation({
+    mutationFn: addPost,
+    onSuccess: () => {
+      setIsOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["posts", currentPage] });
+      if (currentPage !== "1") {
+        router.push("/?page=1");
+      }
+    },
+  });
   const onTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
   };
@@ -24,6 +41,14 @@ const CommentEditor = ({ isOpen, setIsOpen }: CommentEditorProps) => {
     setContent(e.target.value);
   };
 
+  const onPost = () => {
+    if (isPending) return;
+    if (!title || !content) {
+      alert("Title and content cannot be empty");
+      return;
+    }
+    addPostMutate({ title, content });
+  };
   return (
     <Dialog
       open={isOpen}
@@ -58,9 +83,10 @@ const CommentEditor = ({ isOpen, setIsOpen }: CommentEditorProps) => {
           </button>
           <button
             className="text-white font-bold cursor-pointer"
-            onClick={() => setIsOpen(false)}
+            onClick={onPost}
+            disabled={isPending}
           >
-            Post
+            {isPending ? "Posting..." : "Post"}
           </button>
         </div>
       </DialogPanel>

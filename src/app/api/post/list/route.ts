@@ -19,7 +19,7 @@ export const GET = withApiHandler(async (request: NextRequest) => {
     .find({})
     .skip(skip)
     .limit(Number(limit))
-    .sort({ createAt: -1 })
+    .sort({ createdAt: -1 })
     .toArray();
 
   return Response.json(
