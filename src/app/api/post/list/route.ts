@@ -30,6 +30,6 @@ export const GET = withApiHandler(async (request: NextRequest) => {
       limit: Number(limit),
       totalPages: Math.ceil(total / Number(limit)),
     }),
-    { status: 200 }
+    { status: 200 },
   );
 });
